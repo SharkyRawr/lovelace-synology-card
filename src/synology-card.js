@@ -259,6 +259,32 @@ class SynologyCard extends HTMLElement {
     }
   }
 
+  _showMoreInfo(entityId) {
+    if (!this._hass || !entityId) return;
+    this.dispatchEvent(new CustomEvent('hass-more-info', {
+      detail: { entityId },
+      bubbles: true,
+      composed: true
+    }));
+  }
+
+  _attachEntityMoreInfoHandlers() {
+    const clickableEntityElements = this.shadowRoot.querySelectorAll('.entity-link[data-entity-id]');
+    for (const element of clickableEntityElements) {
+      const entityId = element.dataset.entityId;
+      if (!entityId) continue;
+
+      element.addEventListener('click', () => {
+        this._showMoreInfo(entityId);
+      });
+      element.addEventListener('keydown', (ev) => {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        ev.preventDefault();
+        this._showMoreInfo(entityId);
+      });
+    }
+  }
+
   _createCircularProgress(value, color, size = 70) {
     const radius = (size - 8) / 2;
     const circumference = radius * 2 * Math.PI;
@@ -704,6 +730,30 @@ class SynologyCard extends HTMLElement {
           border-color: rgba(245, 158, 11, 0.3);
           color: #f59e0b;
         }
+
+        .entity-link {
+          cursor: pointer;
+          transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .stat-card.entity-link:hover,
+        .update-card.entity-link:hover {
+          background: rgba(255, 255, 255, 0.08);
+          border-color: rgba(96, 165, 250, 0.45);
+        }
+
+        .network-row.entity-link {
+          border-radius: 10px;
+        }
+
+        .network-row.entity-link:hover {
+          background: rgba(255, 255, 255, 0.06);
+        }
+
+        .entity-link:focus-visible {
+          outline: 2px solid rgba(96, 165, 250, 0.9);
+          outline-offset: 2px;
+        }
         
         .buttons {
           display: flex;
@@ -787,7 +837,7 @@ class SynologyCard extends HTMLElement {
         
         <div class="grid">
           ${this._config.show_cpu !== false ? `
-          <div class="stat-card">
+          <div class="stat-card entity-link" data-entity-id="${entities.cpuUtil}" role="button" tabindex="0">
             <div class="stat-header">
               <div class="stat-label">
                 <div class="stat-label-icon" style="background: rgba(34, 197, 94, 0.1);">
@@ -821,7 +871,7 @@ class SynologyCard extends HTMLElement {
           ` : ''}
           
           ${this._config.show_memory !== false ? `
-          <div class="stat-card">
+          <div class="stat-card entity-link" data-entity-id="${entities.memUsage}" role="button" tabindex="0">
             <div class="stat-header">
               <div class="stat-label">
                 <div class="stat-label-icon" style="background: rgba(59, 130, 246, 0.1);">
@@ -863,7 +913,7 @@ class SynologyCard extends HTMLElement {
                 <span class="stat-label-text">Network</span>
               </div>
             </div>
-            <div class="network-row">
+            <div class="network-row entity-link" data-entity-id="${entities.downSpeed}" role="button" tabindex="0">
               <div class="network-icon" style="background: rgba(34, 197, 94, 0.1);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
@@ -879,7 +929,7 @@ class SynologyCard extends HTMLElement {
                 </div>
               </div>
             </div>
-            <div class="network-row">
+            <div class="network-row entity-link" data-entity-id="${entities.upSpeed}" role="button" tabindex="0">
               <div class="network-icon" style="background: rgba(59, 130, 246, 0.1);">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
@@ -899,7 +949,7 @@ class SynologyCard extends HTMLElement {
           ` : ''}
           
           ${this._config.show_temperature !== false ? `
-          <div class="stat-card">
+          <div class="stat-card entity-link" data-entity-id="${entities.temp}" role="button" tabindex="0">
             <div class="stat-header">
               <div class="stat-label">
                 <div class="stat-label-icon" style="background: rgba(${tempColor === '#22c55e' ? '34, 197, 94' : tempColor === '#f59e0b' ? '245, 158, 11' : '239, 68, 68'}, 0.1);">
@@ -932,7 +982,7 @@ class SynologyCard extends HTMLElement {
         </div>
         
         ${this._config.show_update !== false && hasUpdateAvailable ? `
-        <div class="update-card">
+        <div class="update-card entity-link" data-entity-id="${entities.update}" role="button" tabindex="0">
           <div class="update-info">
             <div class="update-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -973,6 +1023,7 @@ class SynologyCard extends HTMLElement {
     // Add event listeners
     const rebootBtn = this.shadowRoot.getElementById('reboot-btn');
     const shutdownBtn = this.shadowRoot.getElementById('shutdown-btn');
+    this._attachEntityMoreInfoHandlers();
     
     if (rebootBtn) {
       rebootBtn.addEventListener('click', () => {
