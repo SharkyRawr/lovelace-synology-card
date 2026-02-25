@@ -189,6 +189,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### Version 1.0.1
+- Open Home Assistant entity "More info" dialog when clicking metric cards/values
+- Release-driven build/release workflow for minified HACS asset
+- "Turned-off" detection when core NAS entities are unavailable
+- Hide "up to date" update panel unless an update is available
+
 ### Version 1.0.0
 - Initial release
 - CPU, Memory, Network, Temperature monitoring
