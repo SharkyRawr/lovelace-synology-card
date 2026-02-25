@@ -455,14 +455,6 @@ class SynologyCard extends HTMLElement {
           font-weight: 500;
         }
         
-        .stat-badge {
-          font-size: 11px;
-          color: #64748b;
-          background: rgba(255,255,255,0.05);
-          padding: 2px 8px;
-          border-radius: 4px;
-        }
-        
         .stat-content {
           display: flex;
           align-items: flex-end;
@@ -770,7 +762,6 @@ class SynologyCard extends HTMLElement {
                 </div>
                 <span class="stat-label-text">CPU</span>
               </div>
-              <span class="stat-badge">8 Cores</span>
             </div>
             <div class="stat-content">
               <div>
@@ -803,7 +794,6 @@ class SynologyCard extends HTMLElement {
                 </div>
                 <span class="stat-label-text">Memory</span>
               </div>
-              <span class="stat-badge">DDR4</span>
             </div>
             <div class="stat-content">
               <div>
@@ -835,7 +825,6 @@ class SynologyCard extends HTMLElement {
                 </div>
                 <span class="stat-label-text">Network</span>
               </div>
-              <span class="stat-badge">1 Gbps</span>
             </div>
             <div class="network-row">
               <div class="network-icon" style="background: rgba(34, 197, 94, 0.1);">
