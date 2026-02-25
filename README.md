@@ -189,6 +189,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### Version 1.0.2
+- Refactor code structure for improved readability and maintainability
+- Update README.md for version 1.0.1 release notes and enhancements
+
 ### Version 1.0.1
 - Open Home Assistant entity "More info" dialog when clicking metric cards/values
 - Release-driven build/release workflow for minified HACS asset
