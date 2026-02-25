@@ -50,6 +50,24 @@ Repository: https://github.com/SharkyRawr/lovelace-synology-card
 4. Restart Home Assistant
 5. Add the card to your dashboard
 
+## Development
+
+- Source file: `src/synology-card.js`
+- Release workflow builds the minified distributable from `src/synology-card.js` on tag push
+
+To publish a new build for HACS:
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Optional local minify command for testing:
+
+```bash
+npx terser src/synology-card.js --compress --mangle --comments false --output synology-card.js
+```
+
 ## Configuration
 
 ### Minimal Configuration

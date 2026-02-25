@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build minified asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          npx terser src/synology-card.js --compress --mangle --comments false --output dist/synology-card.js
+
+      - name: Generate release changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_tag="${GITHUB_REF_NAME}"
+          previous_tag="$(git tag --sort=-creatordate | grep -vx "${current_tag}" | head -n 1 || true)"
+
+          {
+            echo "## Changes"
+            echo
+            if [[ -n "${previous_tag}" ]]; then
+              echo "### ${previous_tag} -> ${current_tag}"
+              echo
+              git log --no-merges --pretty='- %s (%h)' "${previous_tag}..${current_tag}"
+              echo
+              echo "[Full Changelog](https://github.com/${GITHUB_REPOSITORY}/compare/${previous_tag}...${current_tag})"
+            else
+              echo "Initial release."
+              echo
+              git log --no-merges --pretty='- %s (%h)' "${current_tag}"
+            fi
+          } > dist/CHANGELOG.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: dist/CHANGELOG.md
+          files: |
+            dist/synology-card.js
