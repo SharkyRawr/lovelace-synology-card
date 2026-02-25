@@ -132,7 +132,7 @@ class SynologyCard extends HTMLElement {
   }
 
   _getDeviceLabel(device) {
-    return `Synology ${device.charAt(0).toUpperCase() + device.slice(1)}`;
+    return device.charAt(0).toUpperCase() + device.slice(1);
   }
 
   _renderTurnedOffCard(deviceLabel) {
@@ -172,8 +172,24 @@ class SynologyCard extends HTMLElement {
 
         .off-title {
           margin: 0;
+        }
+
+        .off-brand {
+          display: block;
+          font-size: 12px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #fca5a5;
+          margin-bottom: 2px;
+          font-weight: 600;
+        }
+
+        .off-device {
+          display: block;
+          margin: 0;
           font-size: 21px;
           font-weight: 600;
+          line-height: 1.2;
         }
 
         .off-status {
@@ -192,7 +208,10 @@ class SynologyCard extends HTMLElement {
             <path d="M4 20L20 4"/>
           </svg>
         </div>
-        <h2 class="off-title">${deviceLabel}</h2>
+        <h2 class="off-title">
+          <span class="off-brand">Synology</span>
+          <span class="off-device">${deviceLabel}</span>
+        </h2>
         <div class="off-status">Turned off (unavailable)</div>
       </div>
     `;
@@ -381,8 +400,24 @@ class SynologyCard extends HTMLElement {
         
         .title h2 {
           margin: 0;
+        }
+
+        .title-brand {
+          display: block;
+          font-size: 11px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #94a3b8;
+          margin-bottom: 2px;
+          font-weight: 600;
+        }
+
+        .title-device {
+          display: block;
+          margin: 0;
           font-size: 22px;
           font-weight: 600;
+          line-height: 1.2;
         }
         
         .status-badge {
@@ -739,7 +774,10 @@ class SynologyCard extends HTMLElement {
             </svg>
           </div>
           <div class="title">
-            <h2>${deviceLabel}</h2>
+            <h2>
+              <span class="title-brand">Synology</span>
+              <span class="title-device">${deviceLabel}</span>
+            </h2>
             <div class="status-badge">
               <span class="status-dot"></span>
               <span class="status-text">Online</span>
