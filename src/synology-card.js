@@ -382,6 +382,8 @@ class SynologyCard extends HTMLElement {
       <style>
         :host {
           display: block;
+          width: 100%;
+          min-width: 0;
         }
         
         .card {
@@ -392,6 +394,10 @@ class SynologyCard extends HTMLElement {
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
           border: 1px solid rgba(255, 255, 255, 0.1);
           color: white;
+          width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+          container-type: inline-size;
         }
         
         .header {
@@ -473,7 +479,7 @@ class SynologyCard extends HTMLElement {
         
         .grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
           gap: 12px;
           margin-bottom: 16px;
         }
@@ -799,7 +805,15 @@ class SynologyCard extends HTMLElement {
           background: rgba(239, 68, 68, 0.2);
         }
         
-        @media (max-width: 600px) {
+        @container (max-width: 700px) {
+          .header {
+            gap: 12px;
+          }
+
+          .title-device {
+            font-size: 20px;
+          }
+
           .grid {
             grid-template-columns: 1fr;
           }
