@@ -55,6 +55,10 @@ type: custom:synology-card
 device_name: backup
 ```
 
+### Visual Editor
+
+This card now supports the Lovelace visual editor. Use the **Synology Device** picker to select your NAS device directly.
+
 ### Full Configuration
 
 ```yaml
@@ -72,7 +76,8 @@ show_buttons: true
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `device_name` | string | **required** | The device instance name from your Synology integration |
+| `device_name` | string | optional | The Synology instance prefix used in entity IDs (for YAML/manual config) |
+| `device_id` | string | optional | Home Assistant device registry ID (recommended when using the visual editor) |
 | `show_cpu` | boolean | `true` | Show CPU monitoring section |
 | `show_memory` | boolean | `true` | Show memory monitoring section |
 | `show_network` | boolean | `true` | Show network throughput section |

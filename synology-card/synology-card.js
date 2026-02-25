@@ -28,7 +28,8 @@ class SynologyCard extends HTMLElement {
 
   static getStubConfig() {
     return {
-      device_name: 'backup',
+      device_name: '',
+      device_id: '',
       show_cpu: true,
       show_memory: true,
       show_network: true,
@@ -39,9 +40,6 @@ class SynologyCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config.device_name) {
-      throw new Error('device_name is required');
-    }
     this._config = {
       show_cpu: true,
       show_memory: true,
@@ -73,6 +71,25 @@ class SynologyCard extends HTMLElement {
 
   getCardSize() {
     return 4;
+  }
+
+  _resolveDeviceName() {
+    if (this._config?.device_name) return this._config.device_name;
+    if (!this._config?.device_id || !this._hass) return null;
+
+    const states = Object.values(this._hass.states || {});
+    for (const stateObj of states) {
+      const entityId = stateObj.entity_id || '';
+      const matchesDevice = stateObj.attributes?.device_id === this._config.device_id;
+      if (!matchesDevice) continue;
+
+      const match = entityId.match(/^sensor\.(.+)_cpu_utilization_total$/);
+      if (match) {
+        return match[1];
+      }
+    }
+
+    return null;
   }
 
   _getEntityState(entityId) {
@@ -170,7 +187,17 @@ class SynologyCard extends HTMLElement {
       return;
     }
 
-    const device = this._config.device_name;
+    const device = this._resolveDeviceName();
+    if (!device) {
+      this.shadowRoot.innerHTML = `
+        <ha-card>
+          <div style="padding: 16px;">
+            No Synology device selected. Open card settings and select a device.
+          </div>
+        </ha-card>
+      `;
+      return;
+    }
     
     // Entity IDs
     const entities = {
@@ -623,7 +650,7 @@ class SynologyCard extends HTMLElement {
             </svg>
           </div>
           <div class="title">
-            <h2>Synology ${this._config.device_name.charAt(0).toUpperCase() + this._config.device_name.slice(1)}</h2>
+            <h2>Synology ${device.charAt(0).toUpperCase() + device.slice(1)}</h2>
             <div class="status-badge">
               <span class="status-dot"></span>
               <span class="status-text">Online</span>
@@ -842,7 +869,9 @@ class SynologyCard extends HTMLElement {
 }
 
 // Register the card
-customElements.define('synology-card', SynologyCard);
+if (!customElements.get('synology-card')) {
+  customElements.define('synology-card', SynologyCard);
+}
 
 // Register with Lovelace
 window.customCards = window.customCards || [];
@@ -851,3 +880,162 @@ window.customCards.push({
   name: 'Synology DSM Card',
   description: 'A beautiful card to monitor Synology NAS devices'
 });
+
+class SynologyCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = {
+      show_cpu: true,
+      show_memory: true,
+      show_network: true,
+      show_temperature: true,
+      show_buttons: true,
+      show_update: true,
+      ...config
+    };
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._render();
+  }
+
+  _deriveDeviceNameFromDeviceId(deviceId) {
+    if (!this._hass || !deviceId) return null;
+    const states = Object.values(this._hass.states || {});
+
+    for (const stateObj of states) {
+      const entityId = stateObj.entity_id || '';
+      const matchesDevice = stateObj.attributes?.device_id === deviceId;
+      if (!matchesDevice) continue;
+
+      const match = entityId.match(/^sensor\.(.+)_cpu_utilization_total$/);
+      if (match) {
+        return match[1];
+      }
+    }
+
+    return null;
+  }
+
+  _valueChanged(ev) {
+    if (!this._config || !this._hass) return;
+
+    const target = ev.target;
+    const key = target.configValue;
+    if (!key) return;
+
+    let value;
+    if (typeof target.checked === 'boolean') {
+      value = target.checked;
+    } else {
+      value = ev.detail?.value ?? target.value;
+    }
+
+    const newConfig = { ...this._config, [key]: value };
+
+    if (key === 'device_id') {
+      const derivedDeviceName = this._deriveDeviceNameFromDeviceId(value);
+      if (derivedDeviceName) {
+        newConfig.device_name = derivedDeviceName;
+      } else {
+        delete newConfig.device_name;
+      }
+    }
+
+    this._config = newConfig;
+    this.dispatchEvent(new CustomEvent('config-changed', {
+      detail: { config: newConfig },
+      bubbles: true,
+      composed: true
+    }));
+    this._render();
+  }
+
+  _render() {
+    if (!this._config || !this._hass) return;
+
+    this.innerHTML = `
+      <style>
+        .card-config {
+          display: grid;
+          gap: 12px;
+        }
+
+        .toggles {
+          display: grid;
+          gap: 8px;
+        }
+
+        .toggle-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .hint {
+          color: var(--secondary-text-color);
+          font-size: 12px;
+        }
+      </style>
+      <div class="card-config">
+        <ha-device-picker id="device_picker" label="Synology Device"></ha-device-picker>
+        <div class="hint">
+          Pick the Synology DSM device that provides entities such as CPU utilization.
+        </div>
+        <div class="toggles">
+          <div class="toggle-row">
+            <span>Show CPU</span>
+            <ha-switch id="show_cpu"></ha-switch>
+          </div>
+          <div class="toggle-row">
+            <span>Show Memory</span>
+            <ha-switch id="show_memory"></ha-switch>
+          </div>
+          <div class="toggle-row">
+            <span>Show Network</span>
+            <ha-switch id="show_network"></ha-switch>
+          </div>
+          <div class="toggle-row">
+            <span>Show Temperature</span>
+            <ha-switch id="show_temperature"></ha-switch>
+          </div>
+          <div class="toggle-row">
+            <span>Show Update</span>
+            <ha-switch id="show_update"></ha-switch>
+          </div>
+          <div class="toggle-row">
+            <span>Show Buttons</span>
+            <ha-switch id="show_buttons"></ha-switch>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const devicePicker = this.querySelector('#device_picker');
+    devicePicker.hass = this._hass;
+    devicePicker.value = this._config.device_id || '';
+    devicePicker.configValue = 'device_id';
+    devicePicker.includeDomains = ['button', 'sensor', 'update'];
+    devicePicker.addEventListener('value-changed', this._valueChanged.bind(this));
+
+    const toggles = [
+      'show_cpu',
+      'show_memory',
+      'show_network',
+      'show_temperature',
+      'show_update',
+      'show_buttons'
+    ];
+    for (const key of toggles) {
+      const toggle = this.querySelector(`#${key}`);
+      toggle.checked = this._config[key] !== false;
+      toggle.configValue = key;
+      toggle.addEventListener('change', this._valueChanged.bind(this));
+    }
+  }
+}
+
+if (!customElements.get('synology-card-editor')) {
+  customElements.define('synology-card-editor', SynologyCardEditor);
+}
