@@ -108,6 +108,97 @@ class SynologyCard extends HTMLElement {
     return this._getEntityAttr(entityId, 'unit_of_measurement') || '';
   }
 
+  _isUnavailableState(state) {
+    return state === null || state === undefined || state === 'unavailable' || state === 'unknown';
+  }
+
+  _isEntityUnavailable(entityId) {
+    return this._isUnavailableState(this._getEntityState(entityId));
+  }
+
+  _isNasTurnedOff(entities) {
+    const primaryTelemetryEntities = [
+      entities.cpuUtil,
+      entities.memUsage,
+      entities.memTotal,
+      entities.downSpeed,
+      entities.upSpeed,
+      entities.temp
+    ];
+    const unavailablePrimaryTelemetry = primaryTelemetryEntities.filter((entityId) =>
+      this._isEntityUnavailable(entityId)
+    ).length;
+
+    return this._isEntityUnavailable(entities.memTotal) || unavailablePrimaryTelemetry === primaryTelemetryEntities.length;
+  }
+
+  _getDeviceLabel(device) {
+    return `Synology ${device.charAt(0).toUpperCase() + device.slice(1)}`;
+  }
+
+  _renderTurnedOffCard(deviceLabel) {
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+        }
+
+        .off-card {
+          background: linear-gradient(145deg, #18181b 0%, #111827 100%);
+          border-radius: 20px;
+          padding: 24px 20px;
+          border: 1px solid rgba(248, 113, 113, 0.25);
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+          color: #f8fafc;
+          text-align: center;
+        }
+
+        .off-icon {
+          width: 52px;
+          height: 52px;
+          margin: 0 auto 12px;
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(248, 113, 113, 0.12);
+          border: 1px solid rgba(248, 113, 113, 0.3);
+          color: #f87171;
+        }
+
+        .off-icon svg {
+          width: 28px;
+          height: 28px;
+        }
+
+        .off-title {
+          margin: 0;
+          font-size: 21px;
+          font-weight: 600;
+        }
+
+        .off-status {
+          margin-top: 6px;
+          color: #fca5a5;
+          font-size: 14px;
+          font-weight: 500;
+        }
+      </style>
+      <div class="off-card">
+        <div class="off-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <path d="M6 10h.01M6 14h.01"/>
+            <path d="M10 10h8M10 14h8"/>
+            <path d="M4 20L20 4"/>
+          </svg>
+        </div>
+        <h2 class="off-title">${deviceLabel}</h2>
+        <div class="off-status">Turned off (unavailable)</div>
+      </div>
+    `;
+  }
+
   _formatSpeed(value) {
     if (value === null || value === undefined) return '--';
     const num = parseFloat(value);
@@ -216,6 +307,12 @@ class SynologyCard extends HTMLElement {
       reboot: `button.${device}_reboot`,
       shutdown: `button.${device}_shutdown`
     };
+    const deviceLabel = this._getDeviceLabel(device);
+
+    if (this._isNasTurnedOff(entities)) {
+      this._renderTurnedOffCard(deviceLabel);
+      return;
+    }
 
     // Get values
     const cpuVal = parseFloat(this._getEntityState(entities.cpuUtil)) || 0;
@@ -229,6 +326,7 @@ class SynologyCard extends HTMLElement {
     const temp = parseFloat(this._getEntityState(entities.temp)) || 0;
     const updateState = this._getEntityState(entities.update);
     const updateInstalled = this._getEntityAttr(entities.update, 'installed_version') || 'Unknown';
+    const hasUpdateAvailable = updateState === 'on';
 
     const cpuColor = this._getColorForValue(cpuVal, 'cpu');
     const memColor = this._getColorForValue(memUsage, 'memory');
@@ -650,7 +748,7 @@ class SynologyCard extends HTMLElement {
             </svg>
           </div>
           <div class="title">
-            <h2>Synology ${device.charAt(0).toUpperCase() + device.slice(1)}</h2>
+            <h2>${deviceLabel}</h2>
             <div class="status-badge">
               <span class="status-dot"></span>
               <span class="status-text">Online</span>
@@ -807,7 +905,7 @@ class SynologyCard extends HTMLElement {
           ` : ''}
         </div>
         
-        ${this._config.show_update !== false ? `
+        ${this._config.show_update !== false && hasUpdateAvailable ? `
         <div class="update-card">
           <div class="update-info">
             <div class="update-icon">
@@ -820,8 +918,8 @@ class SynologyCard extends HTMLElement {
               <div class="update-version">Version ${updateInstalled}</div>
             </div>
           </div>
-          <div class="update-badge ${updateState === 'on' ? 'warning' : ''}">
-            ${updateState === 'on' ? 'Update Available' : 'Up to date'}
+          <div class="update-badge warning">
+            Update Available
           </div>
         </div>
         ` : ''}

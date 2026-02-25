@@ -10,8 +10,9 @@ A beautiful, modern custom card for Home Assistant to monitor Synology NAS devic
 - 💾 **Memory Monitoring** - Memory usage with progress bar and available memory display
 - 🌐 **Network Throughput** - Download/upload speeds with animated progress bars
 - 🌡️ **Temperature** - Color-coded temperature display with status indicator
-- 🔄 **DSM Update Status** - Shows current DSM version and update availability
+- 🔄 **DSM Update Status** - Shows an update panel only when a DSM update is available
 - ⚡ **Quick Actions** - Reboot and shutdown buttons with confirmation dialogs
+- 🔌 **Turned-Off Detection** - Shows a minimal unavailable state when the NAS is off or core sensors are unavailable
 - 🎨 **Modern Design** - Beautiful gradient backgrounds with glassmorphism effects
 - 📱 **Responsive Layout** - Works perfectly on mobile and desktop
 
@@ -82,7 +83,7 @@ show_buttons: true
 | `show_memory` | boolean | `true` | Show memory monitoring section |
 | `show_network` | boolean | `true` | Show network throughput section |
 | `show_temperature` | boolean | `true` | Show temperature section |
-| `show_update` | boolean | `true` | Show DSM update status |
+| `show_update` | boolean | `true` | Show DSM update panel (only appears when an update is available) |
 | `show_buttons` | boolean | `true` | Show reboot/shutdown buttons |
 
 ## Finding Your Device Name
@@ -145,6 +146,8 @@ This card expects the following entities from the Synology DSM integration:
 1. Verify your Synology DSM integration is working
 2. Check that the `device_name` matches your integration
 3. Ensure all required entities are available
+
+If the NAS is off (or key entities such as `sensor.{device_name}_memory_total_real` are `unavailable`), the card will switch to a minimal "Turned off (unavailable)" view.
 
 ### Styling Issues
 
