@@ -3,7 +3,6 @@
  * A beautiful custom card for Home Assistant to monitor Synology NAS devices
  * 
  * Version: 1.0.0
- * Repository: https://github.com/your-repo/synology-card
  */
 
 class SynologyCard extends HTMLElement {

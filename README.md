@@ -1,8 +1,8 @@
 # Synology DSM Lovelace Card
 
-A beautiful, modern custom card for Home Assistant to monitor Synology NAS devices.
+A modern custom card for Home Assistant to monitor Synology NAS devices.
 
-![Synology Card Preview](https://via.placeholder.com/800x500?text=Synology+Card+Preview)
+![Synology Card Preview](_static/card_preview.png)
 
 ## Features
 
@@ -26,17 +26,19 @@ A beautiful, modern custom card for Home Assistant to monitor Synology NAS devic
 
 ### Option 1: HACS (Recommended)
 
-1. Open HACS in Home Assistant
-2. Go to **Frontend** section
-3. Click the **+** button to add a new repository
-4. Search for "Synology DSM Card" or add the repository URL manually
-5. Click **Download**
-6. Restart Home Assistant
-7. Add the card to your dashboard
+1. Open **HACS** in Home Assistant.
+2. Go to **Custom repositories** and add this repository URL with category **Dashboard**.
+3. Open **HACS** → **Frontend** and search for **Synology DSM Card**.
+4. Click **Download** and restart Home Assistant.
+5. Confirm the resource was added automatically:
+   - URL: `/hacsfiles/<repo-name>/synology-card.js`
+   - Type: **JavaScript Module**
+   - Replace `<repo-name>` with your GitHub repository name if you verify manually.
+6. Add the card to your dashboard.
 
 ### Option 2: Manual Installation
 
-1. Download the `synology-card.js` file from the [releases page](https://github.com/your-repo/synology-card/releases)
+1. Download the `synology-card.js` file from this repository.
 2. Copy it to your Home Assistant `www` folder (create if it doesn't exist)
 3. Add the resource to your dashboard:
    - Go to **Settings** → **Dashboards**
@@ -156,26 +158,9 @@ The card uses modern CSS features. If you experience styling issues:
 2. Try a different browser
 3. Disable any custom themes temporarily
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/your-repo/synology-card/issues) page
-2. Create a new issue with detailed information about your problem
 
 ## Credits
 
@@ -188,7 +173,8 @@ If you encounter any issues or have questions:
 ### Version 1.0.0
 - Initial release
 - CPU, Memory, Network, Temperature monitoring
-- DSM update status display
+- DSM update panel shown only when updates are available
 - Reboot and shutdown buttons
 - Responsive design
 - Color-coded status indicators
+- Turned-off/unavailable NAS state handling
