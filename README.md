@@ -4,6 +4,8 @@ A modern custom card for Home Assistant to monitor Synology NAS devices.
 
 ![Synology Card Preview](_static/card_preview.png)
 
+Repository: https://github.com/SharkyRawr/lovelace-synology-card
+
 ## Features
 
 - 🖥️ **CPU Monitoring** - Real-time CPU utilization with circular gauge and load averages
@@ -27,18 +29,17 @@ A modern custom card for Home Assistant to monitor Synology NAS devices.
 ### Option 1: HACS (Recommended)
 
 1. Open **HACS** in Home Assistant.
-2. Go to **Custom repositories** and add this repository URL with category **Dashboard**.
+2. Go to **Custom repositories** and add `https://github.com/SharkyRawr/lovelace-synology-card` with category **Dashboard**.
 3. Open **HACS** → **Frontend** and search for **Synology DSM Card**.
 4. Click **Download** and restart Home Assistant.
 5. Confirm the resource was added automatically:
-   - URL: `/hacsfiles/<repo-name>/synology-card.js`
+   - URL: `/hacsfiles/lovelace-synology-card/synology-card.js`
    - Type: **JavaScript Module**
-   - Replace `<repo-name>` with your GitHub repository name if you verify manually.
 6. Add the card to your dashboard.
 
 ### Option 2: Manual Installation
 
-1. Download the `synology-card.js` file from this repository.
+1. Download the `synology-card.js` file from `https://github.com/SharkyRawr/lovelace-synology-card`.
 2. Copy it to your Home Assistant `www` folder (create if it doesn't exist)
 3. Add the resource to your dashboard:
    - Go to **Settings** → **Dashboards**
