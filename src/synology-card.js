@@ -69,6 +69,11 @@ class SynologyCard extends HTMLElement {
   }
 
   getCardSize() {
+    if (!this._config || !this._hass) return 4;
+    const device = this._resolveDeviceName();
+    if (!device) return 2;
+    const entities = this._getEntities(device);
+    if (this._isNasTurnedOff(entities)) return 1;
     return 4;
   }
 
@@ -89,6 +94,25 @@ class SynologyCard extends HTMLElement {
     }
 
     return null;
+  }
+
+  _getEntities(device) {
+    return {
+      cpuUtil: `sensor.${device}_cpu_utilization_total`,
+      cpuLoad5: `sensor.${device}_cpu_load_average_5_min`,
+      cpuLoad15: `sensor.${device}_cpu_load_average_15_min`,
+      cpuUser: `sensor.${device}_cpu_utilization_user`,
+      memUsage: `sensor.${device}_memory_usage_real`,
+      memAvail: `sensor.${device}_memory_available_real`,
+      memTotal: `sensor.${device}_memory_total_real`,
+      memSwap: `sensor.${device}_memory_available_swap`,
+      downSpeed: `sensor.${device}_download_throughput`,
+      upSpeed: `sensor.${device}_upload_throughput`,
+      temp: `sensor.${device}_temperature_5`,
+      update: `update.${device}_dsm_update`,
+      reboot: `button.${device}_reboot`,
+      shutdown: `button.${device}_shutdown`
+    };
   }
 
   _getEntityState(entityId) {
@@ -140,23 +164,39 @@ class SynologyCard extends HTMLElement {
       <style>
         :host {
           display: block;
+          width: 100%;
+          min-width: 0;
         }
 
         .off-card {
           background: linear-gradient(145deg, #18181b 0%, #111827 100%);
-          border-radius: 20px;
-          padding: 24px 20px;
+          border-radius: 16px;
+          padding: 12px 16px;
           border: 1px solid rgba(248, 113, 113, 0.25);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
           color: #f8fafc;
-          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+          container-type: inline-size;
+        }
+
+        .off-main {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+          flex: 1;
         }
 
         .off-icon {
-          width: 52px;
-          height: 52px;
-          margin: 0 auto 12px;
-          border-radius: 14px;
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -166,52 +206,92 @@ class SynologyCard extends HTMLElement {
         }
 
         .off-icon svg {
-          width: 28px;
-          height: 28px;
+          width: 20px;
+          height: 20px;
         }
 
         .off-title {
           margin: 0;
+          min-width: 0;
         }
 
         .off-brand {
           display: block;
-          font-size: 12px;
+          font-size: 10px;
           letter-spacing: 0.08em;
           text-transform: uppercase;
           color: #fca5a5;
-          margin-bottom: 2px;
+          margin-bottom: 1px;
           font-weight: 600;
         }
 
         .off-device {
           display: block;
           margin: 0;
-          font-size: 21px;
+          font-size: 18px;
           font-weight: 600;
-          line-height: 1.2;
+          line-height: 1.1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .off-status {
-          margin-top: 6px;
+          margin: 0;
           color: #fca5a5;
           font-size: 14px;
           font-weight: 500;
+          white-space: nowrap;
+        }
+
+        @container (max-width: 520px) {
+          .off-card {
+            padding: 10px 12px;
+            gap: 10px;
+          }
+
+          .off-main {
+            gap: 10px;
+          }
+
+          .off-icon {
+            width: 32px;
+            height: 32px;
+          }
+
+          .off-icon svg {
+            width: 18px;
+            height: 18px;
+          }
+
+          .off-brand {
+            font-size: 9px;
+          }
+
+          .off-device {
+            font-size: 16px;
+          }
+
+          .off-status {
+            font-size: 12px;
+          }
         }
       </style>
       <div class="off-card">
-        <div class="off-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="6" width="20" height="12" rx="2"/>
-            <path d="M6 10h.01M6 14h.01"/>
-            <path d="M10 10h8M10 14h8"/>
-            <path d="M4 20L20 4"/>
-          </svg>
+        <div class="off-main">
+          <div class="off-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <path d="M6 10h.01M6 14h.01"/>
+              <path d="M10 10h8M10 14h8"/>
+              <path d="M4 20L20 4"/>
+            </svg>
+          </div>
+          <h2 class="off-title">
+            <span class="off-brand">Synology</span>
+            <span class="off-device">${deviceLabel}</span>
+          </h2>
         </div>
-        <h2 class="off-title">
-          <span class="off-brand">Synology</span>
-          <span class="off-device">${deviceLabel}</span>
-        </h2>
         <div class="off-status">Turned off (unavailable)</div>
       </div>
     `;
@@ -335,22 +415,7 @@ class SynologyCard extends HTMLElement {
     }
     
     // Entity IDs
-    const entities = {
-      cpuUtil: `sensor.${device}_cpu_utilization_total`,
-      cpuLoad5: `sensor.${device}_cpu_load_average_5_min`,
-      cpuLoad15: `sensor.${device}_cpu_load_average_15_min`,
-      cpuUser: `sensor.${device}_cpu_utilization_user`,
-      memUsage: `sensor.${device}_memory_usage_real`,
-      memAvail: `sensor.${device}_memory_available_real`,
-      memTotal: `sensor.${device}_memory_total_real`,
-      memSwap: `sensor.${device}_memory_available_swap`,
-      downSpeed: `sensor.${device}_download_throughput`,
-      upSpeed: `sensor.${device}_upload_throughput`,
-      temp: `sensor.${device}_temperature_5`,
-      update: `update.${device}_dsm_update`,
-      reboot: `button.${device}_reboot`,
-      shutdown: `button.${device}_shutdown`
-    };
+    const entities = this._getEntities(device);
     const deviceLabel = this._getDeviceLabel(device);
 
     if (this._isNasTurnedOff(entities)) {
@@ -806,6 +871,10 @@ class SynologyCard extends HTMLElement {
         }
         
         @container (max-width: 700px) {
+          .card {
+            padding: 16px;
+          }
+
           .header {
             gap: 12px;
           }
@@ -824,6 +893,94 @@ class SynologyCard extends HTMLElement {
           
           .btn {
             justify-content: center;
+          }
+        }
+
+        @container (max-width: 560px) {
+          .card {
+            padding: 14px;
+          }
+
+          .icon-container {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+          }
+
+          .icon-container svg {
+            width: 24px;
+            height: 24px;
+          }
+
+          .title-brand {
+            font-size: 10px;
+          }
+
+          .title-device {
+            font-size: 18px;
+          }
+
+          .stat-card {
+            padding: 14px;
+          }
+
+          .stat-value {
+            font-size: 28px;
+          }
+
+          .network-value {
+            font-size: 18px;
+          }
+
+          .circular-progress {
+            width: 58px;
+            height: 58px;
+          }
+
+          .update-card {
+            padding: 14px;
+          }
+        }
+
+        @container (max-width: 430px) {
+          .card {
+            padding: 12px;
+          }
+
+          .header {
+            gap: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+          }
+
+          .status-badge {
+            margin-top: 4px;
+          }
+
+          .title-device {
+            font-size: 16px;
+          }
+
+          .stat-card {
+            padding: 12px;
+          }
+
+          .stat-value {
+            font-size: 24px;
+          }
+
+          .stat-unit {
+            font-size: 14px;
+          }
+
+          .network-value {
+            font-size: 16px;
+          }
+
+          .update-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
           }
         }
       </style>

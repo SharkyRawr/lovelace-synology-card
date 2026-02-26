@@ -189,6 +189,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### Version 1.0.3
+- Redesign unavailable/turned-off view into a compact single-row layout
+- Improve responsive behavior for manually resized dashboard cards using additional container breakpoints
+- Adjust card sizing so unavailable state occupies less space in masonry-style dashboards
+
 ### Version 1.0.2
 - Refactor code structure for improved readability and maintainability
 - Update README.md for version 1.0.1 release notes and enhancements
