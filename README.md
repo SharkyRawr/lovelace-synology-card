@@ -189,6 +189,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
+### Version 1.0.4
+- Open Home Assistant device view when clicking the unavailable card
+- Open Home Assistant device view when clicking the NAS name/title in the main card
+- Keep existing entity value/gauge click handlers and button actions intact
+
 ### Version 1.0.3
 - Redesign unavailable/turned-off view into a compact single-row layout
 - Improve responsive behavior for manually resized dashboard cards using additional container breakpoints

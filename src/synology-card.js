@@ -115,6 +115,30 @@ class SynologyCard extends HTMLElement {
     };
   }
 
+  _resolveDeviceId(device, entities = null) {
+    if (this._config?.device_id) return this._config.device_id;
+    if (!this._hass || !device) return null;
+
+    const preferredEntities = entities
+      ? [entities.memTotal, entities.cpuUtil, entities.update]
+      : [];
+    for (const entityId of preferredEntities) {
+      const candidate = this._getEntityAttr(entityId, 'device_id');
+      if (candidate) return candidate;
+    }
+
+    const entityPrefix = `.${device}_`;
+    const states = Object.values(this._hass.states || {});
+    for (const stateObj of states) {
+      const entityId = stateObj.entity_id || '';
+      if (!entityId.includes(entityPrefix)) continue;
+      const candidate = stateObj.attributes?.device_id;
+      if (candidate) return candidate;
+    }
+
+    return null;
+  }
+
   _getEntityState(entityId) {
     if (!this._hass || !entityId) return null;
     const entity = this._hass.states[entityId];
@@ -159,7 +183,7 @@ class SynologyCard extends HTMLElement {
     return device.charAt(0).toUpperCase() + device.slice(1);
   }
 
-  _renderTurnedOffCard(deviceLabel) {
+  _renderTurnedOffCard(deviceLabel, deviceId, fallbackEntityId) {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -183,6 +207,21 @@ class SynologyCard extends HTMLElement {
           min-width: 0;
           box-sizing: border-box;
           container-type: inline-size;
+        }
+
+        .off-card.device-link {
+          cursor: pointer;
+          transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .off-card.device-link:hover {
+          background: linear-gradient(145deg, #1f1f28 0%, #161f33 100%);
+          border-color: rgba(96, 165, 250, 0.45);
+        }
+
+        .off-card.device-link:focus-visible {
+          outline: 2px solid rgba(96, 165, 250, 0.9);
+          outline-offset: 2px;
         }
 
         .off-main {
@@ -277,7 +316,7 @@ class SynologyCard extends HTMLElement {
           }
         }
       </style>
-      <div class="off-card">
+      <div class="off-card device-link" data-device-id="${deviceId || ''}" data-fallback-entity-id="${fallbackEntityId || ''}" role="button" tabindex="0">
         <div class="off-main">
           <div class="off-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -348,6 +387,47 @@ class SynologyCard extends HTMLElement {
     }));
   }
 
+  async _resolveDeviceIdFromRegistry(entityId) {
+    if (!this._hass || !entityId || typeof this._hass.callWS !== 'function') return null;
+    try {
+      const entry = await this._hass.callWS({
+        type: 'config/entity_registry/get',
+        entity_id: entityId
+      });
+      return entry?.device_id || null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  _navigateToDevice(deviceId) {
+    if (!deviceId) return false;
+    const path = `/config/devices/device/${deviceId}`;
+    window.history.pushState(null, '', path);
+    window.dispatchEvent(new Event('location-changed'));
+    return true;
+  }
+
+  async _showDeviceInfo(deviceId, fallbackEntityId) {
+    if (!this._hass) return;
+
+    let resolvedDeviceId = deviceId;
+    if (!resolvedDeviceId && fallbackEntityId) {
+      resolvedDeviceId = await this._resolveDeviceIdFromRegistry(fallbackEntityId);
+    }
+
+    if (resolvedDeviceId) {
+      this.dispatchEvent(new CustomEvent('hass-more-info', {
+        detail: { deviceId: resolvedDeviceId },
+        bubbles: true,
+        composed: true
+      }));
+      if (this._navigateToDevice(resolvedDeviceId)) return;
+      return;
+    }
+    this._showMoreInfo(fallbackEntityId);
+  }
+
   _attachEntityMoreInfoHandlers() {
     const clickableEntityElements = this.shadowRoot.querySelectorAll('.entity-link[data-entity-id]');
     for (const element of clickableEntityElements) {
@@ -361,6 +441,24 @@ class SynologyCard extends HTMLElement {
         if (ev.key !== 'Enter' && ev.key !== ' ') return;
         ev.preventDefault();
         this._showMoreInfo(entityId);
+      });
+    }
+  }
+
+  _attachDeviceMoreInfoHandlers() {
+    const clickableDeviceElements = this.shadowRoot.querySelectorAll('.device-link');
+    for (const element of clickableDeviceElements) {
+      const deviceId = element.dataset.deviceId;
+      const fallbackEntityId = element.dataset.fallbackEntityId;
+      if (!deviceId && !fallbackEntityId) continue;
+
+      element.addEventListener('click', async () => {
+        await this._showDeviceInfo(deviceId, fallbackEntityId);
+      });
+      element.addEventListener('keydown', async (ev) => {
+        if (ev.key !== 'Enter' && ev.key !== ' ') return;
+        ev.preventDefault();
+        await this._showDeviceInfo(deviceId, fallbackEntityId);
       });
     }
   }
@@ -417,9 +515,11 @@ class SynologyCard extends HTMLElement {
     // Entity IDs
     const entities = this._getEntities(device);
     const deviceLabel = this._getDeviceLabel(device);
+    const deviceId = this._resolveDeviceId(device, entities);
 
     if (this._isNasTurnedOff(entities)) {
-      this._renderTurnedOffCard(deviceLabel);
+      this._renderTurnedOffCard(deviceLabel, deviceId, entities.memTotal);
+      this._attachDeviceMoreInfoHandlers();
       return;
     }
 
@@ -497,6 +597,21 @@ class SynologyCard extends HTMLElement {
         
         .title h2 {
           margin: 0;
+        }
+
+        .title h2.device-link {
+          cursor: pointer;
+          transition: opacity 0.2s ease;
+        }
+
+        .title h2.device-link:hover {
+          opacity: 0.9;
+        }
+
+        .title h2.device-link:focus-visible {
+          outline: 2px solid rgba(96, 165, 250, 0.9);
+          outline-offset: 2px;
+          border-radius: 8px;
         }
 
         .title-brand {
@@ -995,7 +1110,7 @@ class SynologyCard extends HTMLElement {
             </svg>
           </div>
           <div class="title">
-            <h2>
+            <h2 class="device-link" data-device-id="${deviceId || ''}" data-fallback-entity-id="${entities.memTotal}" role="button" tabindex="0">
               <span class="title-brand">Synology</span>
               <span class="title-device">${deviceLabel}</span>
             </h2>
@@ -1195,6 +1310,7 @@ class SynologyCard extends HTMLElement {
     const rebootBtn = this.shadowRoot.getElementById('reboot-btn');
     const shutdownBtn = this.shadowRoot.getElementById('shutdown-btn');
     this._attachEntityMoreInfoHandlers();
+    this._attachDeviceMoreInfoHandlers();
     
     if (rebootBtn) {
       rebootBtn.addEventListener('click', () => {
