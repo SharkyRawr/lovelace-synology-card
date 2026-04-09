@@ -2,7 +2,7 @@
  * Synology DSM Lovelace Card
  * A beautiful custom card for Home Assistant to monitor Synology NAS devices
  * 
- * Version: 1.0.0
+ * Version: 1.0.5
  */
 
 class SynologyCard extends HTMLElement {

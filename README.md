@@ -189,6 +189,9 @@ See [LICENSE](LICENSE) file for details.
 
 ## Changelog
 
+### Version 1.0.5
+- Version bump
+
 ### Version 1.0.4
 - Open Home Assistant device view when clicking the unavailable card
 - Open Home Assistant device view when clicking the NAS name/title in the main card
