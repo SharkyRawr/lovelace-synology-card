@@ -45,6 +45,7 @@ local-*
 dev.log
 test
 prompt
+.vscode
 
 server.log
 # Skills directory
