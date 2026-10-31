@@ -2,7 +2,7 @@
  * Synology DSM Lovelace Card
  * A beautiful custom card for Home Assistant to monitor Synology NAS devices
  * 
- * Version: 1.0.5
+ * Version: 1.0.7
  */
 
 class SynologyCard extends HTMLElement {
@@ -336,14 +336,29 @@ class SynologyCard extends HTMLElement {
     `;
   }
 
-  _formatSpeed(value) {
-    if (value === null || value === undefined) return '--';
-    const num = parseFloat(value);
-    if (isNaN(num)) return '--';
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + ' GB/s';
-    }
-    return num.toFixed(1) + ' MB/s';
+  _getSpeedMBps(entityId) {
+    const value = parseFloat(this._getEntityState(entityId));
+    const unit = this._getEntityUnit(entityId) || 'kB/s';
+    const bytesPerUnit = {
+      'B/s': 1,
+      'kB/s': 1000,
+      'KB/s': 1000,
+      'MB/s': 1000000,
+      'GB/s': 1000000000,
+      'KiB/s': 1024,
+      'MiB/s': 1024 ** 2,
+      'GiB/s': 1024 ** 3,
+      'bit/s': 1 / 8,
+      'kbit/s': 1000 / 8,
+      'Mbit/s': 1000000 / 8,
+      'Gbit/s': 1000000000 / 8,
+      'Kibit/s': 1024 / 8,
+      'Mibit/s': 1024 ** 2 / 8,
+      'Gibit/s': 1024 ** 3 / 8
+    }[unit];
+    return Number.isFinite(value) && Number.isFinite(bytesPerUnit)
+      ? value * bytesPerUnit / 1000000
+      : null;
   }
 
   _formatBytes(value) {
@@ -530,8 +545,8 @@ class SynologyCard extends HTMLElement {
     const memUsage = parseFloat(this._getEntityState(entities.memUsage)) || 0;
     const memAvail = parseFloat(this._getEntityState(entities.memAvail)) || 0;
     const memTotal = parseFloat(this._getEntityState(entities.memTotal)) || 0;
-    const downSpeed = parseFloat(this._getEntityState(entities.downSpeed)) || 0;
-    const upSpeed = parseFloat(this._getEntityState(entities.upSpeed)) || 0;
+    const downSpeed = this._getSpeedMBps(entities.downSpeed);
+    const upSpeed = this._getSpeedMBps(entities.upSpeed);
     const temp = parseFloat(this._getEntityState(entities.temp)) || 0;
     const updateState = this._getEntityState(entities.update);
     const updateInstalled = this._getEntityAttr(entities.update, 'installed_version') || 'Unknown';
@@ -1207,7 +1222,7 @@ class SynologyCard extends HTMLElement {
               </div>
               <div class="network-info">
                 <div>
-                  <span class="network-value">${downSpeed.toFixed(1)}</span>
+                  <span class="network-value">${downSpeed?.toFixed(1) ?? '--'}</span>
                   <span class="network-unit">MB/s</span>
                 </div>
                 <div class="network-bar">
@@ -1223,7 +1238,7 @@ class SynologyCard extends HTMLElement {
               </div>
               <div class="network-info">
                 <div>
-                  <span class="network-value">${upSpeed.toFixed(1)}</span>
+                  <span class="network-value">${upSpeed?.toFixed(1) ?? '--'}</span>
                   <span class="network-unit">MB/s</span>
                 </div>
                 <div class="network-bar">

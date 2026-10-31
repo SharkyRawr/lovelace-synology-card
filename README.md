@@ -10,7 +10,7 @@ Repository: https://github.com/SharkyRawr/lovelace-synology-card
 
 - 🖥️ **CPU Monitoring** - Real-time CPU utilization with circular gauge and load averages
 - 💾 **Memory Monitoring** - Memory usage with progress bar and available memory display
-- 🌐 **Network Throughput** - Download/upload speeds with animated progress bars
+- 🌐 **Network Throughput** - Download/upload speeds converted from the sensor's unit to MB/s, with animated progress bars
 - 🌡️ **Temperature** - Color-coded temperature display with status indicator
 - 🔄 **DSM Update Status** - Shows an update panel only when a DSM update is available
 - ⚡ **Quick Actions** - Reboot and shutdown buttons with confirmation dialogs
@@ -188,6 +188,10 @@ See [LICENSE](LICENSE) file for details.
 - Uses standard Lovelace card patterns
 
 ## Changelog
+
+### Version 1.0.7
+- Convert download and upload throughput from the sensor's reported unit to MB/s
+- Show unavailable or unsupported network readings as `--`
 
 ### Version 1.0.5
 - Version bump
